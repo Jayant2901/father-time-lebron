@@ -3,7 +3,6 @@ percentile, pooled across all qualifying player-seasons in NBA history.
 """
 from dataclasses import dataclass
 
-import numpy as np
 import pandas as pd
 
 from app.core.config import LOW_CONFIDENCE_COHORT_N, MIN_QUALIFYING_SEASONS_FOR_COHORT

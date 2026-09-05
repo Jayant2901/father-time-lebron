@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+data/raw/
+data/processed/*.csv
+backend/tests/
+scripts/
+requirements.txt
+README.md

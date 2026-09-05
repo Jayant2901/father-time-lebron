@@ -5,5 +5,12 @@ __pycache__/
 data/raw/
 data/processed/*.db
 data/processed/*.csv
+# Exception: the built cache IS committed, deliberately, as a deployment
+# artifact -- most free hosting tiers have ephemeral filesystems, so the
+# Dockerfile bakes this file in at build time rather than regenerating it
+# from live external APIs on every deploy. Regenerate it locally with
+# scripts/fetch_nba_api_data.py + fetch_basketball_reference.py + build_cache.py
+# whenever a newer season needs to be added.
+!data/processed/nba_aging.db
 *.log
 .env

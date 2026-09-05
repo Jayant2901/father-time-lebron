@@ -1,0 +1,9 @@
+# Minimal dependencies for actually RUNNING the deployed app (see backend/app/**
+# imports). Data acquisition (nba_api, cloudscraper, beautifulsoup4, lxml,
+# html5lib) and testing (pytest, httpx, tenacity) are dev-only and live in
+# requirements.txt -- the deploy image doesn't need them, since acquisition
+# is a one-time batch job that produced data/processed/nba_aging.db locally.
+fastapi
+uvicorn[standard]
+pydantic
+pandas

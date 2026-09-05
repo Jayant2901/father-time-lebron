@@ -74,6 +74,17 @@ Two real bugs surfaced while building this, both worth knowing about if you exte
 1. **Character encoding**: Basketball-Reference's `Content-Type` header omits a charset, so `requests`/`cloudscraper` default to ISO-8859-1 per RFC 2616 even though the actual content is UTF-8 — every accented name (Jokić, Dončić, Nesterović, ...) came out mangled until `resp.encoding` was forced to `"utf-8"` before reading `.text`.
 2. **Name-matching false negatives from over-aggressive suffix stripping**: an early version of the cross-source join stripped generational suffixes (Jr./Sr./II/III) to reconcile cases like nba_api's "Jimmy Butler III" vs BR's "Jimmy Butler" — but this accidentally merged real father/son duos (Larry Nance and Larry Nance Jr., Tim Hardaway and Tim Hardaway Jr.) into one fictitious player_id, since BR *does* distinguish those pairs by suffix. The fix: try an exact suffix-preserving match first, and only fall back to a suffix-stripped match within the same season for genuine single-person spelling gaps. A monotonic-age check (a real player's age should never decrease season-to-season) now runs after every build as a safety net and would have caught this class of bug immediately.
 
+## Deploying (Render)
+
+The repo includes `render.yaml`, so deployment is a Blueprint away:
+
+1. Go to [dashboard.render.com](https://dashboard.render.com) → **New** → **Blueprint**.
+2. Connect the `nba-aging-curves` GitHub repo (grant Render access if this is its first time seeing your account).
+3. Render reads `render.yaml` and provisions a free Docker web service automatically — no manual config needed, since the Dockerfile already bakes in `data/processed/nba_aging.db`.
+4. Once deployed, hit `<your-render-url>/health` and `<your-render-url>/docs` to confirm, then load the root URL for the frontend.
+
+Free-tier Render services spin down after inactivity and take ~30-60s to wake back up on the next request — normal, not a bug.
+
 ## Project layout
 
 ```

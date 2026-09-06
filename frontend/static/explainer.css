@@ -1,38 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap');
 
 :root {
-  --color-bg: #f6f1e6;
-  --color-surface: #ece3d1;
-  --color-text: #241a35;
-  --color-accent: #552583;
-  --color-accent-2: #a3790c;
-  --color-divider: rgba(36, 26, 53, 0.18);
+  color-scheme: dark;
 
-  --color-neutral-100: #faf7f0;
-  --color-neutral-200: #ece6d8;
-  --color-neutral-300: #dcd3bd;
-  --color-neutral-400: #c0b49a;
-  --color-neutral-500: #9c8f78;
-  --color-neutral-700: #5c5140;
-  --color-neutral-800: #3c3427;
+  --color-bg: #15101d;
+  --color-surface: #1f1829;
+  --color-text: #e9e2f2;
+  --color-accent: #a879e6;
+  --color-accent-2: #eab93c;
+  --color-divider: rgba(233, 226, 242, 0.16);
 
-  --color-accent-100: #efe4f7;
-  --color-accent-500: #8f5cc4;
-  --color-accent-600: #6b3aa0;
-  --color-accent-700: #46236b;
-  --color-accent-800: #2f1748;
+  --color-neutral-100: #251d31;
+  --color-neutral-200: #2c2339;
+  --color-neutral-300: #392c49;
+  --color-neutral-400: #6b5c85;
+  --color-neutral-500: #9184a8;
+  --color-neutral-700: #cabfdb;
+  --color-neutral-800: #f1ecf9;
 
-  --color-accent-2-100: #fbf1da;
-  --color-accent-2-200: #f4e0ab;
-  --color-accent-2-800: #503a05;
+  --color-accent-100: #2f2242;
+  --color-accent-500: #bb8ff2;
+  --color-accent-600: #bd93f0;
+  --color-accent-700: #cba8f5;
+  --color-accent-800: #e2c8ff;
+
+  --color-accent-2-100: #3d2f10;
+  --color-accent-2-200: #4a3913;
+  --color-accent-2-800: #ffdf94;
 
   /* Referee-flag red -- reserved for anomaly callouts only (hero SD stat,
      archetype badges via .tag-accent). Never used as the general brand
      accent -- that's what --color-accent (purple) and --color-accent-2
      (gold) are for. */
-  --color-flag: #c8102e;
-  --color-flag-100: #fbe6ea;
-  --color-flag-800: #6e0a19;
+  --color-flag: #ff5c7a;
+  --color-flag-100: #3d1620;
+  --color-flag-800: #ffb8c6;
 
   --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
   --font-heading: var(--font-display);
@@ -48,7 +50,7 @@
   --radius-sm: 1px;
   --radius-md: 2px;
 
-  --shadow-sm: 0 1px 2px rgba(36, 26, 53, 0.14);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 * { box-sizing: border-box; }
@@ -81,7 +83,7 @@ body.explainer {
 .explainer figcaption {
   font-size: 11px;
   margin-top: var(--space-1);
-  color: rgba(36, 26, 53, 0.55);
+  color: rgba(233, 226, 242, 0.55);
 }
 
 .explainer .wrap { max-width: 880px; margin: 0 auto; padding: 0 var(--space-4); }
@@ -131,7 +133,7 @@ body.explainer {
 .explainer .btn-primary { background: var(--color-accent); color: var(--color-bg); }
 .explainer .btn-primary:hover { background: var(--color-accent-600); }
 .explainer .btn-secondary { border-color: var(--color-divider); }
-.explainer .btn-secondary:hover { background: rgba(36, 26, 53, 0.07); }
+.explainer .btn-secondary:hover { background: rgba(233, 226, 242, 0.08); }
 
 /* stat row */
 .explainer .stat-value {
@@ -237,7 +239,7 @@ body.explainer {
   border: none; background: transparent; color: inherit; cursor: pointer;
   font-size: 15px; line-height: 1; padding: 2px 5px; border-radius: 3px;
 }
-.explainer .chip button:hover { background: rgba(0,0,0,0.08); }
+.explainer .chip button:hover { background: rgba(255,255,255,0.14); }
 
 .explainer .status { min-height: 1.4em; margin-top: var(--space-2); }
 .explainer .status .error { color: var(--color-flag); font-size: 13px; }
@@ -300,7 +302,7 @@ body.sunshine-locked { overflow: hidden; }
 }
 .sunshine-splash-img {
   max-width: min(320px, 78vw); border-radius: var(--radius-md);
-  box-shadow: 0 4px 24px rgba(36, 26, 53, 0.2);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   animation: sunshine-pulse 2.2s ease-in-out infinite;
 }
 .sunshine-splash-caption {

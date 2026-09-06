@@ -280,13 +280,29 @@ function selectSoloPlayer(playerId) {
 
 // ---- Hero stats (always LeBron/PER, independent of the solo picker) -------
 
+// Standard-normal CDF (Abramowitz & Stegun 7.1.26) -- used only to translate
+// a z-score into a rough "better than X% of his age-peers" plain-English
+// figure for readers who don't have an intuition for "standard deviations".
+function normalCdf(z) {
+  const sign = z < 0 ? -1 : 1;
+  const x = Math.abs(z) / Math.SQRT2;
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  const t = 1 / (1 + p * x);
+  const erf = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return 0.5 * (1 + sign * erf);
+}
+
 async function loadHeroStats() {
   try {
     const data = await fetchJSON(`/players/${encodeURIComponent(lebronId)}/aging-curve?metrics=PER`);
     const r = data.results[0];
     const zs = r.points.map((p) => p.z_score).filter((z) => z != null);
     if (!zs.length) return;
-    eby("hero-sd").textContent = `+${Math.min(...zs).toFixed(1)} to +${Math.max(...zs).toFixed(1)} SD`;
+    const minZ = Math.min(...zs), maxZ = Math.max(...zs);
+    eby("hero-sd").textContent = `+${minZ.toFixed(1)} to +${maxZ.toFixed(1)} SD`;
+    const minPct = Math.round(normalCdf(minZ) * 100);
+    const maxPct = Math.round(normalCdf(maxZ) * 100);
+    eby("hero-sd-note").textContent = `translation: better than roughly ${minPct}–${maxPct}% of players his age, every single season`;
   } catch (_) {
     // Decorative -- a failure here shouldn't block the rest of the page.
   }

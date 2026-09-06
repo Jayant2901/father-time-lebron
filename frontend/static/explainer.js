@@ -601,4 +601,34 @@ async function init() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", init);
+// ---- Sunshine splash gate ----------------------------------------------
+
+function initSunshineSplash() {
+  const splash = eby("sunshine-splash");
+  const audio = eby("sunshine-audio");
+  const muteBtn = eby("sunshine-mute-btn");
+  if (!splash || !audio || !muteBtn) return;
+
+  document.body.classList.add("sunshine-locked");
+
+  const enter = () => {
+    audio.play().then(() => { muteBtn.hidden = false; }).catch(() => {});
+    splash.classList.add("is-leaving");
+    document.body.classList.remove("sunshine-locked");
+    setTimeout(() => splash.remove(), 500);
+  };
+  splash.addEventListener("click", enter);
+  splash.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); enter(); }
+  });
+
+  muteBtn.addEventListener("click", () => {
+    audio.muted = !audio.muted;
+    muteBtn.textContent = audio.muted ? "🔇" : "🔊";
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initSunshineSplash();
+  init();
+});

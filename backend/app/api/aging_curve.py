@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.analysis.aging_curve import compute_age_baseline
 from app.analysis.anomaly import compute_player_trajectory
+from app.analysis.archetype import classify_archetype
 from app.analysis.percentile import add_qualified_flag, within_season_percentile
 from app.core.cache_repository import get_repository
 from app.core.config import (
@@ -18,6 +19,7 @@ from app.core.config import (
 from app.schemas.models import (
     AgingCurveMetricResult,
     AgingCurveResponse,
+    ArchetypeOut,
     BaselinePoint,
     BaselineResponse,
     CareerSummaryOut,
@@ -64,6 +66,7 @@ def get_aging_curve(
         df = _prepare(repo.player_seasons, metric, spec, min_minutes, min_games)
         baseline = compute_age_baseline(df, "pct", min_seasons=min_seasons, low_confidence_n=low_confidence_n)
         points, summary = compute_player_trajectory(df, baseline, player_id, metric, "pct")
+        archetype = classify_archetype(points, summary)
 
         results.append(
             AgingCurveMetricResult(
@@ -72,6 +75,7 @@ def get_aging_curve(
                 unit=spec.unit,
                 points=[TrajectoryPointOut(**dataclasses.asdict(p)) for p in points],
                 summary=CareerSummaryOut(**dataclasses.asdict(summary)),
+                archetype=ArchetypeOut(label=archetype.label, tagline=archetype.tagline) if archetype else None,
             )
         )
 

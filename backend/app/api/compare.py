@@ -17,6 +17,20 @@ from app.schemas.models import ComparePlayerOut, CompareResponse
 router = APIRouter()
 
 
+def _generate_verdict(players: list[ComparePlayerOut], display_name: str) -> str | None:
+    scored = [p for p in players if p.career_anomaly_index is not None]
+    if len(scored) < 2:
+        return None
+    ranked = sorted(scored, key=lambda p: p.career_anomaly_index, reverse=True)
+    best, worst = ranked[0], ranked[-1]
+    if best.career_anomaly_index - worst.career_anomaly_index < 0.15:
+        return f"Basically a wash on {display_name} — less than 0.15 SD separates them, career-wide."
+    return (
+        f"{best.display_name} aged better relative to his cohort in {display_name}: "
+        f"{best.career_anomaly_index:+.2f} SD vs {worst.display_name}'s {worst.career_anomaly_index:+.2f} SD, career-wide."
+    )
+
+
 @router.get("/compare", response_model=CompareResponse)
 def compare_players(
     player_ids: str = Query(..., description="Comma-separated player_id values, e.g. lebron james,michael jordan"),
@@ -64,4 +78,10 @@ def compare_players(
             )
         )
 
-    return CompareResponse(metric=metric, display_name=spec.display_name, unit=spec.unit, players=out)
+    return CompareResponse(
+        metric=metric,
+        display_name=spec.display_name,
+        unit=spec.unit,
+        players=out,
+        verdict=_generate_verdict(out, spec.display_name),
+    )

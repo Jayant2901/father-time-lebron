@@ -25,12 +25,12 @@
 </nav>
 
 <header class="wrap" style="padding: var(--space-8) 0 var(--space-6);">
-  <p class="eyebrow">Portfolio data project — NBA aging curves</p>
+  <p class="flag-tab">Portfolio data project — NBA aging curves</p>
   <h1 style="max-width: 720px;">Bro is not aging. I checked. It's not normal.</h1>
   <p class="section-intro" style="font-size: 18px;">I built real aging curves from every qualifying NBA/BAA player-season since 1949-50, then measured how many standard deviations any player sits above or below the historical norm <em>at their exact age</em>. LeBron doesn't just beat the curve — he's been ghosting Father Time since 2003, every single age, no exceptions.</p>
   <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; margin-top: var(--space-6);">
     <div style="flex: 1 1 220px; max-width: 240px;">
-      <div id="hero-sd" class="stat-value" style="color: var(--color-accent-700);">…</div>
+      <div id="hero-sd" class="stat-value" style="color: var(--color-flag);">…</div>
       <div id="hero-sd-note" class="tag tag-accent" style="margin-top: var(--space-2); white-space: normal;">…</div>
     </div>
     <div style="flex: 1 1 220px; max-width: 240px;">
@@ -45,30 +45,36 @@
 </header>
 
 <section id="method" class="wrap bordered">
-  <p class="eyebrow">The idea, in three steps</p>
+  <p class="flag-tab">The idea, in three steps</p>
   <h2>How I turned "he doesn't age" into an actual receipt</h2>
   <p class="section-intro">Raw stats can't be compared across eras — a 1975 stat line and a 2024 stat line are basically different sports. So the pipeline never touches raw stats twice: it converts, then compares, then hands you the proof.</p>
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4); margin-top: var(--space-6); align-items: stretch;">
-    <div class="card">
-      <div class="card-kicker">Step 1</div>
-      <div class="card-title">Rank him against literally everyone that year</div>
-      <p class="card-body">Every player-season becomes a 0–100 percentile among that year's qualifying players. 100 = best in the league that year; 50 = "you exist." Same trick baseball uses for OPS+.</p>
+  <div class="stat-sheet">
+    <div class="stat-sheet-row">
+      <div class="stat-sheet-num">01</div>
+      <div>
+        <div class="stat-sheet-title">Rank him against literally everyone that year</div>
+        <p class="stat-sheet-body">Every player-season becomes a 0–100 percentile among that year's qualifying players. 100 = best in the league that year; 50 = "you exist." Same trick baseball uses for OPS+.</p>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-kicker">Step 2</div>
-      <div class="card-title">Figure out what "normal" even looks like</div>
-      <p class="card-body">Every qualifying player-season at, say, age 27, gets pooled together into a mean and standard deviation — history's own definition of "a normal 27-year-old," no vibes involved.</p>
+    <div class="stat-sheet-row">
+      <div class="stat-sheet-num">02</div>
+      <div>
+        <div class="stat-sheet-title">Figure out what "normal" even looks like</div>
+        <p class="stat-sheet-body">Every qualifying player-season at, say, age 27, gets pooled together into a mean and standard deviation — history's own definition of "a normal 27-year-old," no vibes involved.</p>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-kicker">Step 3</div>
-      <div class="card-title">Catch him being unnatural</div>
-      <p class="card-body">z = (his percentile − age's mean) ÷ age's std. ±1 SD raises an eyebrow. ±2 is basically a medical anomaly. LeBron casually lives at +1.5 to +1.8, every age, forever.</p>
+    <div class="stat-sheet-row">
+      <div class="stat-sheet-num">03</div>
+      <div>
+        <div class="stat-sheet-title">Catch him being unnatural</div>
+        <p class="stat-sheet-body">z = (his percentile − age's mean) ÷ age's std. ±1 SD raises an eyebrow. ±2 is basically a medical anomaly. LeBron casually lives at +1.5 to +1.8, every age, forever.</p>
+      </div>
     </div>
   </div>
 </section>
 
 <section id="charts" class="wrap bordered">
-  <p class="eyebrow">The deep dive</p>
+  <p class="flag-tab">The deep dive</p>
   <h2 id="solo-title">LeBron, season by season, never once acting his age</h2>
   <p class="section-intro">By default: LeBron's percentile at each age, against the shaded band of what's typical for a player that age across NBA history. He never dips into the band — not once, not even at 39. Search below to line anyone else up against him.</p>
 
@@ -98,7 +104,7 @@
 </section>
 
 <section id="compare" class="wrap bordered">
-  <p class="eyebrow">Featured comparison</p>
+  <p class="flag-tab">Featured comparison</p>
   <h2>LeBron vs. the other legends (he's still not humble about it)</h2>
   <p class="section-intro">Position = how good a player was on average (up) and for how long (right). Bubble size = how far their aging pattern strays from the historical norm — LeBron's circle is just built different. Add or remove anyone below to rebuild the chart.</p>
 
@@ -124,11 +130,12 @@
     <div id="bubble-faces" style="position: absolute; inset: 0;"></div>
   </figure>
   <figcaption>Axes are zoomed to this roster, not the full 0–100 scale — read positions relative to each other, not against some fantasy 100. Figures come from the same live pipeline as the tool itself.</figcaption>
+  <div id="compare-verdict" class="inline-summary"></div>
   <div id="compare-point-detail" class="point-detail">Hover or tap a face to see their stats.</div>
 </section>
 
 <section id="trust" class="wrap bordered">
-  <p class="eyebrow">How much to trust this</p>
+  <p class="flag-tab">How much to trust this</p>
   <h2>Some ages barely have any receipts, ngl</h2>
   <p class="section-intro">The age baseline only pools players with several qualifying seasons, and only ages with at least 15 historical player-seasons get full confidence. Teenage and late-30s seasons are real but rare — I'm not going to pretend I'm sure when I'm not.</p>
   <div id="confidence-bars" style="display: flex; align-items: flex-end; gap: var(--space-4); height: 160px; margin-top: var(--space-6); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-divider);"></div>
@@ -136,7 +143,7 @@
 </section>
 
 <section class="wrap bordered">
-  <p class="eyebrow">The fine print</p>
+  <p class="flag-tab">The fine print</p>
   <h3>Things worth knowing (the nerdy stuff, but I tried)</h3>
   <ul class="fine-print">
     <li>I compare percentiles, not raw stats — a 1975 stat line and a 2024 stat line are basically speaking different languages.</li>

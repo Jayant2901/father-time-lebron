@@ -214,12 +214,15 @@ function renderLineChart({ svgId, facesContainerId, detailId, baseline, series }
 }
 
 function renderSoloSummary(series) {
-  eby("solo-summary").innerHTML = series.map(({ displayName, metricDisplayName, summary, color }) => {
+  eby("solo-summary").innerHTML = series.map(({ displayName, metricDisplayName, summary, color, archetype }) => {
     if (summary.career_anomaly_index == null) {
       return `<p>${displayName} has no qualifying seasons for ${metricDisplayName} under the current thresholds.</p>`;
     }
     const dir = summary.career_anomaly_index >= 0 ? "above" : "below";
-    return `<p><strong style="color:${color};">${displayName}</strong> — Career Anomaly Index for ${metricDisplayName}:
+    const badge = archetype
+      ? `<span class="tag tag-accent">${archetype.label}</span> <span>${archetype.tagline}</span><br>`
+      : "";
+    return `<p>${badge}<strong style="color:${color};">${displayName}</strong> — Career Anomaly Index for ${metricDisplayName}:
       <strong>${summary.career_anomaly_index.toFixed(2)} SD</strong> ${dir} the typical aging curve
       (${describeSd(summary.career_anomaly_index)}).
       Peak-anomaly age: <strong>${summary.peak_anomaly_age}</strong>
@@ -255,6 +258,7 @@ async function loadSoloChart() {
         metricDisplayName: result.display_name,
         points: result.points,
         summary: result.summary,
+        archetype: result.archetype,
         headshotUrl: headshotsById[id] ?? null,
         color: id === lebronId ? "var(--color-accent-2)" : "var(--color-accent)",
       };
@@ -490,6 +494,7 @@ async function loadCompare() {
   if (compareRoster.length === 0) {
     eby("bubble-chart-svg").innerHTML = "";
     eby("bubble-faces").innerHTML = "";
+    eby("compare-verdict").textContent = "";
     return;
   }
   setLoading(true, "compare-loading");
@@ -498,6 +503,7 @@ async function loadCompare() {
     const idsParam = compareRoster.map((p) => encodeURIComponent(p.player_id)).join(",");
     const data = await fetchJSON(`/compare?player_ids=${idsParam}&metric=${encodeURIComponent(metric)}`);
     renderBubbleChart(data.players);
+    eby("compare-verdict").textContent = data.verdict ?? "";
   } catch (err) {
     showError(err.message, "compare-error");
   } finally {

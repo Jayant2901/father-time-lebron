@@ -28,12 +28,18 @@ class CareerSummaryOut(BaseModel):
     qualifying_season_count: int
 
 
+class ArchetypeOut(BaseModel):
+    label: str
+    tagline: str
+
+
 class AgingCurveMetricResult(BaseModel):
     metric: str
     display_name: str
     unit: str
     points: list[TrajectoryPointOut]
     summary: CareerSummaryOut
+    archetype: ArchetypeOut | None = None
 
 
 class AgingCurveResponse(BaseModel):
@@ -73,6 +79,7 @@ class CompareResponse(BaseModel):
     display_name: str
     unit: str
     players: list[ComparePlayerOut]
+    verdict: str | None = None
 
 
 class MetricInfo(BaseModel):

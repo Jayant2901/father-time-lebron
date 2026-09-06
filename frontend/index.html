@@ -63,12 +63,12 @@
 <section id="charts" class="wrap bordered">
   <p class="eyebrow">The deep dive</p>
   <h2 id="solo-title">LeBron, season by season, never once acting his age</h2>
-  <p class="section-intro">By default: LeBron's percentile at each age, against the shaded band of what's typical for a player that age across NBA history. He never dips into the band — not once, not even at 39. That magenta line has main-character energy and refuses to come down. Search below to run this same check on anyone else in the database.</p>
+  <p class="section-intro">By default: LeBron's percentile at each age, against the shaded band of what's typical for a player that age across NBA history. He never dips into the band — not once, not even at 39. Search below to line anyone else up against him.</p>
 
   <div class="search-block">
     <div class="search-row">
       <input id="solo-search" type="text" placeholder="Search any player (e.g. Jordan, Kareem, Curry)" autocomplete="off">
-      <button id="solo-search-btn" type="button">Search</button>
+      <button id="solo-search-btn" type="button">Compare to LeBron</button>
     </div>
     <div id="solo-search-results" class="search-results"></div>
   </div>
@@ -82,8 +82,8 @@
   </div>
 
   <figure class="chart-frame" style="margin-top: var(--space-4);">
-    <img id="solo-face" class="face-slot" alt="" src="" style="border: 2px solid var(--color-accent-2); z-index: 2;">
-    <svg id="solo-chart-svg" class="chart-svg" viewBox="0 0 760 320" role="img" aria-label="Selected player's percentile by age versus league baseline band"></svg>
+    <svg id="solo-chart-svg" class="chart-svg" viewBox="0 0 760 320" role="img" aria-label="Selected player's percentile by age versus league baseline band, compared with LeBron James"></svg>
+    <div id="solo-faces" style="position: absolute; inset: 0;"></div>
   </figure>
   <figcaption>Shaded band = league mean ± 1 SD of within-season percentile at each age, pooled across NBA history. Faded points sit on a thin historical cohort — interpret cautiously.</figcaption>
   <div id="solo-point-detail" class="point-detail">Hover or tap a point to see that season's details.</div>

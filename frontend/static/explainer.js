@@ -67,7 +67,7 @@ function svgEl(tag, attrs) {
 
 // ---- Generic player search (shared by both interactive sections) ----------
 
-async function searchPlayers(query, resultsContainerId, errId, onPick, pickLabel) {
+async function searchPlayers(query, resultsContainerId, errId, onPick, pickLabel, inputId) {
   clearError(errId);
   const container = eby(resultsContainerId);
   container.innerHTML = "";
@@ -85,7 +85,11 @@ async function searchPlayers(query, resultsContainerId, errId, onPick, pickLabel
       const btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = `${pickLabel} ${p.display_name} (${p.first_season}–${p.last_season})`;
-      btn.onclick = () => onPick(p.player_id, p.display_name);
+      btn.onclick = () => {
+        onPick(p.player_id, p.display_name);
+        container.innerHTML = "";
+        if (inputId) eby(inputId).value = "";
+      };
       container.appendChild(btn);
     }
   } catch (err) {
@@ -93,11 +97,11 @@ async function searchPlayers(query, resultsContainerId, errId, onPick, pickLabel
   }
 }
 
-// ---- Section 1: single-player line chart -----------------------------------
+// ---- Section 1: player vs. LeBron line chart -------------------------------
 
-let soloPlayerId = null;
+let soloPlayerId = null; // the "other" player; null/lebronId means "LeBron alone"
 
-function describeAgePoint(p) {
+function describeAgePoint(p, playerName) {
   const z = p.z_score != null
     ? `${p.z_score.toFixed(2)} SD (${describeSd(p.z_score)})`
     : "n/a (no baseline at this age)";
@@ -105,6 +109,7 @@ function describeAgePoint(p) {
     ? `<div class="detail-note">Low-confidence age — small historical sample, interpret cautiously.</div>`
     : "";
   return `
+    <div class="detail-row"><span class="detail-label">Player</span><span class="detail-value">${playerName}</span></div>
     <div class="detail-row"><span class="detail-label">Age</span><span class="detail-value">${p.age} (Season ${p.season})</span></div>
     <div class="detail-row"><span class="detail-label">Raw value</span><span class="detail-value">${p.value.toFixed(1)}</span></div>
     <div class="detail-row"><span class="detail-label">Percentile</span><span class="detail-value">${p.percentile.toFixed(1)}</span></div>
@@ -113,15 +118,17 @@ function describeAgePoint(p) {
   `;
 }
 
-function renderLineChart({ svgId, faceId, detailId, points, summary, headshotUrl }) {
+// `baseline` (from /baseline) spans the full historical age range regardless
+// of either player's own career -- it's what lets two players with very
+// different career lengths sit on one shared age axis.
+function renderLineChart({ svgId, facesContainerId, detailId, baseline, series }) {
   const padL = 44, padT = 20, padR = 20, padB = 36, W = 760, H = 320;
   const innerW = W - padL - padR, innerH = H - padT - padB;
-  const n = points.length;
-  const xAt = (i) => (n === 1 ? padL + innerW / 2 : padL + (i / (n - 1)) * innerW);
-  const yAt = (v) => padT + ((100 - v) / 100) * innerH;
 
-  const bandTop = points.map((p) => (p.cohort_mean != null ? Math.min(100, p.cohort_mean + p.cohort_std) : null));
-  const bandBottom = points.map((p) => (p.cohort_mean != null ? Math.max(0, p.cohort_mean - p.cohort_std) : null));
+  const ages = baseline.points.map((b) => b.age);
+  const minAge = Math.min(...ages), maxAge = Math.max(...ages);
+  const xAt = (age) => padL + ((age - minAge) / (maxAge - minAge)) * innerW;
+  const yAt = (v) => padT + ((100 - v) / 100) * innerH;
 
   const svg = eby(svgId);
   svg.innerHTML = "";
@@ -138,121 +145,127 @@ function renderLineChart({ svgId, faceId, detailId, points, summary, headshotUrl
     svg.appendChild(svgEl("line", { x1: padL, y1: y, x2: W - padR, y2: y, stroke: "var(--color-divider)", "stroke-width": 0.5, "stroke-dasharray": "2,3" }));
   }
 
-  const tickEvery = Math.max(1, Math.round(n / 8));
-  for (let i = 0; i < n; i += tickEvery) {
-    const t = svgEl("text", { x: xAt(i), y: 298, "text-anchor": "middle", class: "axis-label" });
-    t.textContent = String(points[i].age);
+  const tickEvery = Math.max(1, Math.round((maxAge - minAge) / 8));
+  for (let age = minAge; age <= maxAge; age += tickEvery) {
+    const t = svgEl("text", { x: xAt(age), y: 298, "text-anchor": "middle", class: "axis-label" });
+    t.textContent = String(age);
     svg.appendChild(t);
   }
 
   const bandPoints = [
-    ...bandTop.map((v, i) => (v != null ? `${xAt(i)},${yAt(v)}` : null)).filter(Boolean),
-    ...bandBottom.map((v, i) => (v != null ? `${xAt(i)},${yAt(v)}` : null)).filter(Boolean).reverse(),
+    ...baseline.points.map((b) => `${xAt(b.age)},${yAt(Math.min(100, b.mean + b.std))}`),
+    ...baseline.points.slice().reverse().map((b) => `${xAt(b.age)},${yAt(Math.max(0, b.mean - b.std))}`),
   ].join(" ");
   svg.appendChild(svgEl("polygon", { points: bandPoints, fill: "var(--color-accent-100)" }));
 
-  const baselinePoints = points
-    .map((p, i) => (p.cohort_mean != null ? `${xAt(i)},${yAt(p.cohort_mean)}` : null))
-    .filter(Boolean)
-    .join(" ");
-  svg.appendChild(svgEl("polyline", { points: baselinePoints, fill: "none", stroke: "var(--color-neutral-500)", "stroke-width": 1.5, "stroke-dasharray": "4,3" }));
+  const baselineLine = baseline.points.map((b) => `${xAt(b.age)},${yAt(b.mean)}`).join(" ");
+  svg.appendChild(svgEl("polyline", { points: baselineLine, fill: "none", stroke: "var(--color-neutral-500)", "stroke-width": 1.5, "stroke-dasharray": "4,3" }));
 
-  const linePoints = points.map((p, i) => `${xAt(i)},${yAt(p.percentile)}`).join(" ");
-  svg.appendChild(svgEl("polyline", { points: linePoints, fill: "none", stroke: "var(--color-accent-2)", "stroke-width": 2.5 }));
+  const showDetail = (p, name) => { eby(detailId).innerHTML = describeAgePoint(p, name); };
 
-  const showDetail = (p) => { eby(detailId).innerHTML = describeAgePoint(p); };
+  const facesContainer = eby(facesContainerId);
+  facesContainer.innerHTML = "";
 
-  points.forEach((p, i) => {
-    const c = svgEl("circle", {
-      cx: xAt(i), cy: yAt(p.percentile), r: p.low_confidence ? 3 : 4,
-      fill: "#d6006c", opacity: p.low_confidence ? 0.4 : 1, style: "cursor: pointer;",
+  series.forEach(({ points, summary, headshotUrl, color, displayName }) => {
+    if (!points.length) return;
+
+    const linePoints = points.map((p) => `${xAt(p.age)},${yAt(p.percentile)}`).join(" ");
+    svg.appendChild(svgEl("polyline", { points: linePoints, fill: "none", stroke: color, "stroke-width": 2.5 }));
+
+    points.forEach((p) => {
+      const c = svgEl("circle", {
+        cx: xAt(p.age), cy: yAt(p.percentile), r: p.low_confidence ? 3 : 4,
+        fill: color, opacity: p.low_confidence ? 0.45 : 1, style: "cursor: pointer;",
+      });
+      c.addEventListener("mouseenter", () => showDetail(p, displayName));
+      c.addEventListener("click", () => showDetail(p, displayName));
+      svg.appendChild(c);
     });
-    c.addEventListener("mouseenter", () => showDetail(p));
-    c.addEventListener("click", () => showDetail(p));
-    svg.appendChild(c);
+
+    const last = points[points.length - 1];
+    const labelX = Math.min(W - padR - 4, xAt(last.age) + 6);
+    const label = svgEl("text", { x: labelX, y: yAt(last.percentile), class: "axis-label", fill: color, "font-weight": 600, "font-size": 12 });
+    label.textContent = displayName;
+    svg.appendChild(label);
+
+    const peakIdx = points.findIndex((p) => p.age === summary.peak_anomaly_age);
+    if (peakIdx >= 0 && headshotUrl) {
+      const faceD = 44;
+      const cx = xAt(points[peakIdx].age), cy = yAt(points[peakIdx].percentile) - (faceD / 2 + 6);
+      const img = document.createElement("img");
+      img.className = "face-slot";
+      img.alt = displayName;
+      img.src = headshotUrl;
+      img.style.width = `${(faceD / W) * 100}%`;
+      img.style.height = `${(faceD / H) * 100}%`;
+      img.style.left = `${((cx - faceD / 2) / W) * 100}%`;
+      img.style.top = `${((cy - faceD / 2) / H) * 100}%`;
+      img.style.border = `2px solid ${color}`;
+      img.onerror = () => { img.style.display = "none"; };
+      img.addEventListener("click", () => showDetail(points[peakIdx], displayName));
+      facesContainer.appendChild(img);
+    }
   });
 
-  const lastIdx = n - 1;
-  const labelX = Math.max(padL + 30, xAt(lastIdx) - 30);
-  const lineLabel = svgEl("text", { x: labelX, y: yAt(points[lastIdx].percentile) - 10, class: "axis-label", fill: "var(--color-accent-2)", "font-weight": 600, "font-size": 12 });
-  lineLabel.textContent = "Percentile";
-  svg.appendChild(lineLabel);
-
-  if (points[lastIdx].cohort_mean != null) {
-    const baseLabel = svgEl("text", { x: labelX, y: yAt(points[lastIdx].cohort_mean) + 16, class: "axis-label", fill: "var(--color-neutral-700)", "font-size": 12 });
-    baseLabel.textContent = "League baseline (mean)";
-    svg.appendChild(baseLabel);
+  const featured = series[series.length - 1];
+  if (featured && featured.points.length) {
+    showDetail(featured.points[featured.points.length - 1], featured.displayName);
   }
-
-  // Face slot: place near peak-anomaly age, from the real summary.
-  const face = eby(faceId);
-  const peakIdx = points.findIndex((p) => p.age === summary.peak_anomaly_age);
-  const faceD = 56;
-  if (peakIdx >= 0 && headshotUrl) {
-    const cx = xAt(peakIdx), cy = yAt(points[peakIdx].percentile) - 30;
-    face.style.width = `${faceD}px`;
-    face.style.height = `${faceD}px`;
-    face.style.left = `${((cx - faceD / 2) / W) * 100}%`;
-    face.style.top = `${((cy - faceD / 2) / H) * 100}%`;
-    face.style.display = "";
-    face.src = headshotUrl;
-    face.onerror = () => { face.style.display = "none"; };
-  } else {
-    face.style.display = "none";
-  }
-
-  if (points.length) showDetail(points[points.length - 1]);
 }
 
-function renderSoloSummary(player, metricResult) {
-  const s = metricResult.summary;
-  const container = eby("solo-summary");
-  if (s.career_anomaly_index == null) {
-    container.innerHTML = `<p>${player.display_name} has no qualifying seasons for ${metricResult.display_name} under the current thresholds.</p>`;
-    return;
-  }
-  const dir = s.career_anomaly_index >= 0 ? "above" : "below";
-  container.innerHTML = `
-    <p><strong>${player.display_name}</strong> — Career Anomaly Index for ${metricResult.display_name}:
-      <strong>${s.career_anomaly_index.toFixed(2)} SD</strong> ${dir} the typical aging curve
-      (${describeSd(s.career_anomaly_index)}).
-      Peak-anomaly age: <strong>${s.peak_anomaly_age}</strong>
-      · seasons in the league-wide top 5%: <strong>${s.top_5_pct_season_count}</strong>
-      · qualifying seasons analyzed: ${s.qualifying_season_count}.</p>
-  `;
+function renderSoloSummary(series) {
+  eby("solo-summary").innerHTML = series.map(({ displayName, metricDisplayName, summary, color }) => {
+    if (summary.career_anomaly_index == null) {
+      return `<p>${displayName} has no qualifying seasons for ${metricDisplayName} under the current thresholds.</p>`;
+    }
+    const dir = summary.career_anomaly_index >= 0 ? "above" : "below";
+    return `<p><strong style="color:${color};">${displayName}</strong> — Career Anomaly Index for ${metricDisplayName}:
+      <strong>${summary.career_anomaly_index.toFixed(2)} SD</strong> ${dir} the typical aging curve
+      (${describeSd(summary.career_anomaly_index)}).
+      Peak-anomaly age: <strong>${summary.peak_anomaly_age}</strong>
+      · seasons in the league-wide top 5%: <strong>${summary.top_5_pct_season_count}</strong>
+      · qualifying seasons analyzed: ${summary.qualifying_season_count}.</p>`;
+  }).join("");
 }
 
 async function loadSoloChart() {
-  if (!soloPlayerId) return;
   clearError("solo-error");
   setLoading(true, "solo-loading");
   try {
     const metric = eby("solo-metric-select").value || "PER";
-    const data = await fetchJSON(`/players/${encodeURIComponent(soloPlayerId)}/aging-curve?metrics=${encodeURIComponent(metric)}`);
-    const result = data.results[0];
+    const comparing = Boolean(soloPlayerId) && soloPlayerId !== lebronId;
+    const ids = comparing ? [lebronId, soloPlayerId] : [lebronId];
 
-    const isDefaultView = soloPlayerId === lebronId && metric === "PER";
-    eby("solo-title").textContent = isDefaultView
-      ? "LeBron, season by season, never once acting his age"
-      : `${data.player.display_name}, season by season, vs. the historical baseline`;
+    const [baseline, ...agingCurves] = await Promise.all([
+      fetchJSON(`/baseline?metric=${encodeURIComponent(metric)}`),
+      ...ids.map((id) => fetchJSON(`/players/${encodeURIComponent(id)}/aging-curve?metrics=${encodeURIComponent(metric)}`)),
+    ]);
 
-    // Look up a headshot for the face slot via the /compare endpoint (cheapest
-    // way to get a headshot_url without a dedicated player-detail endpoint).
-    let headshotUrl = null;
+    let headshotsById = {};
     try {
-      const cmp = await fetchJSON(`/compare?player_ids=${encodeURIComponent(soloPlayerId)}&metric=${encodeURIComponent(metric)}`);
-      headshotUrl = cmp.players[0]?.headshot_url ?? null;
+      const cmp = await fetchJSON(`/compare?player_ids=${ids.map(encodeURIComponent).join(",")}&metric=${encodeURIComponent(metric)}`);
+      headshotsById = Object.fromEntries(cmp.players.map((p) => [p.player_id, p.headshot_url]));
     } catch (_) { /* decorative only */ }
 
-    renderLineChart({
-      svgId: "solo-chart-svg",
-      faceId: "solo-face",
-      detailId: "solo-point-detail",
-      points: result.points,
-      summary: result.summary,
-      headshotUrl,
+    const series = ids.map((id, i) => {
+      const result = agingCurves[i].results[0];
+      return {
+        playerId: id,
+        displayName: agingCurves[i].player.display_name,
+        metricDisplayName: result.display_name,
+        points: result.points,
+        summary: result.summary,
+        headshotUrl: headshotsById[id] ?? null,
+        color: id === lebronId ? "var(--color-accent-2)" : "var(--color-accent)",
+      };
     });
-    renderSoloSummary(data.player, result);
+
+    eby("solo-title").textContent = comparing
+      ? `${series[1].displayName} vs. LeBron, season by season`
+      : "LeBron, season by season, never once acting his age";
+
+    renderLineChart({ svgId: "solo-chart-svg", facesContainerId: "solo-faces", detailId: "solo-point-detail", baseline, series });
+    renderSoloSummary(series);
   } catch (err) {
     showError(err.message, "solo-error");
   } finally {
@@ -549,20 +562,16 @@ async function init() {
 
     lebronId = await resolvePlayerId("LeBron James");
 
-    eby("solo-search-btn").addEventListener("click", () =>
-      searchPlayers(eby("solo-search").value, "solo-search-results", "solo-error", (id) => selectSoloPlayer(id), "View")
-    );
-    eby("solo-search").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") searchPlayers(eby("solo-search").value, "solo-search-results", "solo-error", (id) => selectSoloPlayer(id), "View");
-    });
+    const runSoloSearch = () =>
+      searchPlayers(eby("solo-search").value, "solo-search-results", "solo-error", (id) => selectSoloPlayer(id), "Compare", "solo-search");
+    eby("solo-search-btn").addEventListener("click", runSoloSearch);
+    eby("solo-search").addEventListener("keydown", (e) => { if (e.key === "Enter") runSoloSearch(); });
     eby("solo-metric-select").addEventListener("change", loadSoloChart);
 
-    eby("compare-search-btn").addEventListener("click", () =>
-      searchPlayers(eby("compare-search").value, "compare-search-results", "compare-error", addToComparison, "+")
-    );
-    eby("compare-search").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") searchPlayers(eby("compare-search").value, "compare-search-results", "compare-error", addToComparison, "+");
-    });
+    const runCompareSearch = () =>
+      searchPlayers(eby("compare-search").value, "compare-search-results", "compare-error", addToComparison, "+", "compare-search");
+    eby("compare-search-btn").addEventListener("click", runCompareSearch);
+    eby("compare-search").addEventListener("keydown", (e) => { if (e.key === "Enter") runCompareSearch(); });
     eby("compare-metric-select").addEventListener("change", loadCompare);
 
     await Promise.all([

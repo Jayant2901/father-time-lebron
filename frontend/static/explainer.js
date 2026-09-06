@@ -152,6 +152,14 @@ function renderLineChart({ svgId, facesContainerId, detailId, baseline, series }
     svg.appendChild(t);
   }
 
+  const xAxisLabel = svgEl("text", { x: (padL + (W - padR)) / 2, y: 314, "text-anchor": "middle", class: "axis-label" });
+  xAxisLabel.textContent = "Age →";
+  svg.appendChild(xAxisLabel);
+  const yAxisMidY = padT + innerH / 2;
+  const yAxisLabel = svgEl("text", { x: 12, y: yAxisMidY, "text-anchor": "middle", class: "axis-label", transform: `rotate(-90 12 ${yAxisMidY})` });
+  yAxisLabel.textContent = "Percentile vs. peers →";
+  svg.appendChild(yAxisLabel);
+
   const bandPoints = [
     ...baseline.points.map((b) => `${xAt(b.age)},${yAt(Math.min(100, b.mean + b.std))}`),
     ...baseline.points.slice().reverse().map((b) => `${xAt(b.age)},${yAt(Math.max(0, b.mean - b.std))}`),

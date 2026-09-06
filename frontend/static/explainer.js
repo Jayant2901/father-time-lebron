@@ -29,7 +29,7 @@ function populateMetricSelect(selectId, metrics, defaultKey) {
   for (const m of metrics) {
     const opt = document.createElement("option");
     opt.value = m.key;
-    opt.textContent = m.unit ? `${m.display_name} (${m.unit})` : m.display_name;
+    opt.textContent = m.unit && !m.display_name.includes(m.unit) ? `${m.display_name} (${m.unit})` : m.display_name;
     select.appendChild(opt);
   }
   if ([...select.options].some((o) => o.value === defaultKey)) {

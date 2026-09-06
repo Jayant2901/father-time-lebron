@@ -1,6 +1,16 @@
 const eby = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
 
+// Fires `fn` `delay`ms after the last call -- used so live-as-you-type
+// search doesn't fire a request per keystroke, only once typing pauses.
+function debounce(fn, delay) {
+  let timer = null;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
 let metricsCache = null;
 let lebronId = null;
 
@@ -696,12 +706,14 @@ async function init() {
       searchPlayers(eby("solo-search").value, "solo-search-results", "solo-error", (id) => selectSoloPlayer(id), "Compare", "solo-search");
     eby("solo-search-btn").addEventListener("click", runSoloSearch);
     eby("solo-search").addEventListener("keydown", (e) => { if (e.key === "Enter") runSoloSearch(); });
+    eby("solo-search").addEventListener("input", debounce(runSoloSearch, 250));
     eby("solo-metric-select").addEventListener("change", loadSoloChart);
 
     const runCompareSearch = () =>
       searchPlayers(eby("compare-search").value, "compare-search-results", "compare-error", addToComparison, "+", "compare-search");
     eby("compare-search-btn").addEventListener("click", runCompareSearch);
     eby("compare-search").addEventListener("keydown", (e) => { if (e.key === "Enter") runCompareSearch(); });
+    eby("compare-search").addEventListener("input", debounce(runCompareSearch, 250));
     eby("compare-metric-select").addEventListener("change", loadCompare);
 
     await Promise.all([

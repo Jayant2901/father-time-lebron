@@ -101,7 +101,12 @@ body.explainer {
 
 .explainer section { padding: var(--space-8) 0; }
 .explainer section.bordered { border-top: 1px solid var(--color-divider); }
-.explainer .section-intro { font-size: 16px; max-width: 640px; opacity: 0.85; }
+/* margin-bottom (not the default paragraph --space-3) so every section
+   gets the same gap before whatever comes next -- relies on margin
+   collapsing with that next element's own top margin (the larger of the
+   two wins), so this sets a consistent FLOOR site-wide rather than
+   stacking on top of per-element margins. */
+.explainer .section-intro { font-size: 16px; max-width: 640px; opacity: 0.85; margin-bottom: var(--space-6); }
 .explainer .axis-label { font-size: 10px; fill: var(--color-neutral-700); font-family: var(--font-body); }
 .explainer .chart-svg { width: 100%; height: auto; display: block; }
 
@@ -134,7 +139,7 @@ body.explainer {
 }
 
 .explainer .hero-stats {
-  display: flex; flex-wrap: wrap; gap: var(--space-8) var(--space-6); margin-top: var(--space-8);
+  display: flex; flex-wrap: wrap; gap: var(--space-8) var(--space-6); margin-top: var(--space-6);
 }
 .explainer .hero-stat { flex: 1 1 220px; max-width: 240px; }
 .explainer .hero-stat .tag { margin-top: var(--space-3); white-space: normal; line-height: 1.4; }

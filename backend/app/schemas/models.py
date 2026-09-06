@@ -40,6 +40,7 @@ class AgingCurveMetricResult(BaseModel):
     points: list[TrajectoryPointOut]
     summary: CareerSummaryOut
     archetype: ArchetypeOut | None = None
+    roast: str | None = None
 
 
 class AgingCurveResponse(BaseModel):
@@ -80,6 +81,24 @@ class CompareResponse(BaseModel):
     unit: str
     players: list[ComparePlayerOut]
     verdict: str | None = None
+
+
+class LeaderboardEntry(BaseModel):
+    rank: int
+    player_id: str
+    display_name: str
+    headshot_url: str | None
+    qualifying_season_count: int
+    career_anomaly_index: float
+    archetype: ArchetypeOut | None = None
+
+
+class LeaderboardResponse(BaseModel):
+    metric: str
+    display_name: str
+    unit: str
+    direction: str
+    entries: list[LeaderboardEntry]
 
 
 class MetricInfo(BaseModel):

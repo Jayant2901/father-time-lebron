@@ -244,6 +244,48 @@ body.explainer {
 .explainer .inline-summary { font-size: 14px; margin-top: var(--space-3); opacity: 0.9; }
 .explainer .inline-summary strong { color: var(--color-accent-800); }
 
+/* "Roast me" reveal button */
+.explainer .roast-btn {
+  display: inline-flex; align-items: center; font-family: var(--font-body);
+  font-size: 12px; font-weight: 600; color: var(--color-bg); background: var(--color-flag);
+  border: none; border-radius: 2px; padding: 3px 10px; cursor: pointer; margin-right: var(--space-2);
+}
+.explainer .roast-btn:hover { background: var(--color-flag-800); }
+.explainer .roast-text { font-style: italic; opacity: 0.9; }
+
+/* "What if" age slider */
+.explainer .whatif-block {
+  margin-top: var(--space-4); padding: var(--space-3); background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+.explainer .whatif-title { font-size: 16px; margin: 0 0 var(--space-2); }
+.explainer .whatif-block input[type="range"] { width: 100%; accent-color: var(--color-accent); }
+.explainer .whatif-output { font-size: 14px; margin-top: var(--space-2); min-height: 1.4em; }
+.explainer .whatif-output strong { color: var(--color-accent-800); }
+.explainer .whatif-disclaimer { font-size: 11px; opacity: 0.7; font-style: italic; margin: var(--space-2) 0 0; }
+
+/* Leaderboard / "Hall of Weird" */
+.explainer .direction-toggle { display: flex; gap: var(--space-2); margin-top: var(--space-4); }
+.explainer .direction-btn {
+  font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  color: var(--color-text); background: var(--color-surface);
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+  padding: 6px 14px; cursor: pointer;
+}
+.explainer .direction-btn.active { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-bg); }
+.explainer .direction-btn:not(.active):hover { background: var(--color-accent-100); }
+
+.explainer .leaderboard-list { list-style: none; margin: var(--space-4) 0 0; padding: 0; border-top: 1px solid var(--color-divider); }
+.explainer .leaderboard-row {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider);
+}
+.explainer .leaderboard-rank { font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--color-accent-2); width: 32px; flex-shrink: 0; text-align: right; }
+.explainer .leaderboard-face { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--color-neutral-200); }
+.explainer .leaderboard-face-empty { display: inline-block; }
+.explainer .leaderboard-name { font-weight: 600; flex: 1; min-width: 0; }
+.explainer .leaderboard-index { font-family: var(--font-display); font-weight: 700; font-size: 14px; white-space: nowrap; }
+
 /* sunshine splash gate */
 body.sunshine-locked { overflow: hidden; }
 

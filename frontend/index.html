@@ -20,6 +20,7 @@
   <a href="#method">Method</a>
   <a href="#charts">The data</a>
   <a href="#compare">Compare</a>
+  <a href="#leaderboard">Hall of Weird</a>
   <a href="#trust">Trust</a>
   <a href="#charts" class="btn btn-secondary">Look someone up ↓</a>
 </nav>
@@ -101,6 +102,14 @@
   <figcaption>Shaded band = league mean ± 1 SD of within-season percentile at each age, pooled across NBA history. Faded points sit on a thin historical cohort — interpret cautiously.</figcaption>
   <div id="solo-point-detail" class="point-detail">Hover or tap a point to see that season's details.</div>
   <div id="solo-summary" class="inline-summary"></div>
+  <div id="solo-verdict" class="inline-summary" hidden></div>
+
+  <div id="whatif-block" class="whatif-block" hidden>
+    <h3 class="whatif-title">What if <span class="whatif-player-name">this player</span> played at a different age?</h3>
+    <input id="whatif-age-slider" type="range" min="18" max="45" value="27" step="1">
+    <div id="whatif-output" class="whatif-output"></div>
+    <p class="whatif-disclaimer">Descriptive, not predictive: this just projects <span class="whatif-player-name">this player</span>'s own career-average distance from the baseline onto a different age, assuming that distance holds at every age (it usually doesn't right at the start or end of a career). Not a forecast.</p>
+  </div>
 </section>
 
 <section id="compare" class="wrap bordered">
@@ -132,6 +141,27 @@
   <figcaption>Axes are zoomed to this roster, not the full 0–100 scale — read positions relative to each other, not against some fantasy 100. Figures come from the same live pipeline as the tool itself.</figcaption>
   <div id="compare-verdict" class="inline-summary"></div>
   <div id="compare-point-detail" class="point-detail">Hover or tap a face to see their stats.</div>
+</section>
+
+<section id="leaderboard" class="wrap bordered">
+  <p class="flag-tab">Hall of Weird</p>
+  <h2>The most (and least) anomalous aging curves in NBA history</h2>
+  <p class="section-intro">Every player with at least 3 qualifying seasons, ranked by Career Anomaly Index — how far their whole career sits from the age-by-age historical baseline. Flip the toggle to see who aged the worst instead of the best.</p>
+
+  <div class="metric-row">
+    <label for="leaderboard-metric-select">Metric</label>
+    <select id="leaderboard-metric-select"></select>
+  </div>
+  <div class="direction-toggle">
+    <button class="direction-btn active" type="button" data-direction="top">Most anomalous</button>
+    <button class="direction-btn" type="button" data-direction="bottom">Aged the worst</button>
+  </div>
+  <div class="status">
+    <div id="leaderboard-loading" class="loading-text" hidden>Loading…</div>
+    <div id="leaderboard-error" class="error" hidden></div>
+  </div>
+
+  <ol id="leaderboard-list" class="leaderboard-list"></ol>
 </section>
 
 <section id="trust" class="wrap bordered">

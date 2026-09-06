@@ -213,8 +213,50 @@ function renderLineChart({ svgId, facesContainerId, detailId, baseline, series }
   }
 }
 
+// A deliberately naive projection: assumes the player's own career-average
+// distance from the baseline (their career_anomaly_index) holds at every
+// age, then reads off what percentile that distance implies at the
+// selected age's baseline mean/std. Descriptive, not predictive -- real
+// aging curves are not flat, especially at the very start/end of a career.
+function setupWhatIf(baseline, featured) {
+  const block = eby("whatif-block");
+  const slider = eby("whatif-age-slider");
+  const output = eby("whatif-output");
+  const z = featured && featured.summary ? featured.summary.career_anomaly_index : null;
+
+  if (z == null || !baseline.points.length) {
+    block.hidden = true;
+    return;
+  }
+  block.hidden = false;
+  for (const el of document.querySelectorAll(".whatif-player-name")) el.textContent = featured.displayName;
+
+  const byAge = new Map(baseline.points.map((b) => [b.age, b]));
+  const ages = baseline.points.map((b) => b.age);
+  const minAge = Math.min(...ages), maxAge = Math.max(...ages);
+  slider.min = String(minAge);
+  slider.max = String(maxAge);
+  const current = Number(slider.value);
+  if (!current || current < minAge || current > maxAge) {
+    slider.value = String(Math.round((minAge + maxAge) / 2));
+  }
+
+  const update = () => {
+    const age = Number(slider.value);
+    const b = byAge.get(age);
+    if (!b) {
+      output.textContent = `No historical baseline at age ${age}.`;
+      return;
+    }
+    const projected = Math.max(0, Math.min(100, b.mean + z * b.std));
+    output.innerHTML = `At age <strong>${age}</strong>: roughly the <strong>${projected.toFixed(0)}th percentile</strong> among players that age (projecting ${featured.displayName}'s own ${z >= 0 ? "+" : ""}${z.toFixed(2)} SD career-average distance from the baseline onto this age).`;
+  };
+  slider.oninput = update;
+  update();
+}
+
 function renderSoloSummary(series) {
-  eby("solo-summary").innerHTML = series.map(({ displayName, metricDisplayName, summary, color, archetype }) => {
+  eby("solo-summary").innerHTML = series.map(({ displayName, metricDisplayName, summary, color, archetype, roast }) => {
     if (summary.career_anomaly_index == null) {
       return `<p>${displayName} has no qualifying seasons for ${metricDisplayName} under the current thresholds.</p>`;
     }
@@ -222,13 +264,25 @@ function renderSoloSummary(series) {
     const badge = archetype
       ? `<span class="tag tag-accent">${archetype.label}</span> <span>${archetype.tagline}</span><br>`
       : "";
-    return `<p>${badge}<strong style="color:${color};">${displayName}</strong> — Career Anomaly Index for ${metricDisplayName}:
+    const roastBlock = roast
+      ? `<button type="button" class="roast-btn">🔥 Roast</button>
+         <span class="roast-text" hidden>${roast}</span><br>`
+      : "";
+    return `<p>${badge}${roastBlock}<strong style="color:${color};">${displayName}</strong> — Career Anomaly Index for ${metricDisplayName}:
       <strong>${summary.career_anomaly_index.toFixed(2)} SD</strong> ${dir} the typical aging curve
       (${describeSd(summary.career_anomaly_index)}).
       Peak-anomaly age: <strong>${summary.peak_anomaly_age}</strong>
       · seasons in the league-wide top 5%: <strong>${summary.top_5_pct_season_count}</strong>
       · qualifying seasons analyzed: ${summary.qualifying_season_count}.</p>`;
   }).join("");
+
+  for (const btn of eby("solo-summary").querySelectorAll(".roast-btn")) {
+    btn.addEventListener("click", () => {
+      const text = btn.nextElementSibling;
+      text.hidden = !text.hidden;
+      btn.textContent = text.hidden ? "🔥 Roast" : "🔥 Hide roast";
+    });
+  }
 }
 
 async function loadSoloChart() {
@@ -245,9 +299,11 @@ async function loadSoloChart() {
     ]);
 
     let headshotsById = {};
+    let goatVerdict = null;
     try {
       const cmp = await fetchJSON(`/compare?player_ids=${ids.map(encodeURIComponent).join(",")}&metric=${encodeURIComponent(metric)}`);
       headshotsById = Object.fromEntries(cmp.players.map((p) => [p.player_id, p.headshot_url]));
+      goatVerdict = cmp.verdict ?? null;
     } catch (_) { /* decorative only */ }
 
     const series = ids.map((id, i) => {
@@ -259,6 +315,7 @@ async function loadSoloChart() {
         points: result.points,
         summary: result.summary,
         archetype: result.archetype,
+        roast: result.roast,
         headshotUrl: headshotsById[id] ?? null,
         color: id === lebronId ? "var(--color-accent-2)" : "var(--color-accent)",
       };
@@ -270,6 +327,17 @@ async function loadSoloChart() {
 
     renderLineChart({ svgId: "solo-chart-svg", facesContainerId: "solo-faces", detailId: "solo-point-detail", baseline, series });
     renderSoloSummary(series);
+
+    const verdictEl = eby("solo-verdict");
+    if (comparing && goatVerdict) {
+      verdictEl.textContent = `🐐 GOAT debate: ${goatVerdict}`;
+      verdictEl.hidden = false;
+    } else {
+      verdictEl.textContent = "";
+      verdictEl.hidden = true;
+    }
+
+    setupWhatIf(baseline, series[series.length - 1]);
   } catch (err) {
     showError(err.message, "solo-error");
   } finally {
@@ -541,6 +609,49 @@ async function initCompareDefaults() {
   await loadCompare();
 }
 
+// ---- Section 4: anomaly leaderboard / "Hall of Weird" ----------------------
+
+let leaderboardDirection = "top";
+
+function renderLeaderboard(entries) {
+  eby("leaderboard-list").innerHTML = entries.map((e) => `
+    <li class="leaderboard-row">
+      <span class="leaderboard-rank">${e.rank}</span>
+      ${e.headshot_url
+        ? `<img class="leaderboard-face" src="${e.headshot_url}" alt="${e.display_name}" onerror="this.style.visibility='hidden'">`
+        : `<span class="leaderboard-face leaderboard-face-empty"></span>`}
+      <span class="leaderboard-name">${e.display_name}</span>
+      ${e.archetype ? `<span class="tag tag-accent">${e.archetype.label}</span>` : ""}
+      <span class="leaderboard-index">${e.career_anomaly_index >= 0 ? "+" : ""}${e.career_anomaly_index.toFixed(2)} SD</span>
+    </li>
+  `).join("");
+}
+
+async function loadLeaderboard() {
+  clearError("leaderboard-error");
+  setLoading(true, "leaderboard-loading");
+  try {
+    const metric = eby("leaderboard-metric-select").value || "PER";
+    const data = await fetchJSON(`/leaderboard?metric=${encodeURIComponent(metric)}&direction=${leaderboardDirection}&limit=20`);
+    renderLeaderboard(data.entries);
+  } catch (err) {
+    showError(err.message, "leaderboard-error");
+  } finally {
+    setLoading(false, "leaderboard-loading");
+  }
+}
+
+function setupLeaderboardControls() {
+  for (const btn of document.querySelectorAll(".direction-btn")) {
+    btn.addEventListener("click", () => {
+      leaderboardDirection = btn.dataset.direction;
+      for (const b of document.querySelectorAll(".direction-btn")) b.classList.toggle("active", b === btn);
+      loadLeaderboard();
+    });
+  }
+  eby("leaderboard-metric-select").addEventListener("change", loadLeaderboard);
+}
+
 // ---- Confidence bars --------------------------------------------------
 
 async function renderConfidenceBars() {
@@ -581,6 +692,8 @@ async function init() {
     const metrics = await getMetrics();
     populateMetricSelect("solo-metric-select", metrics, "PER");
     populateMetricSelect("compare-metric-select", metrics, "PER");
+    populateMetricSelect("leaderboard-metric-select", metrics, "PER");
+    setupLeaderboardControls();
 
     lebronId = await resolvePlayerId("LeBron James");
 
@@ -601,6 +714,7 @@ async function init() {
       selectSoloPlayer(lebronId),
       initCompareDefaults(),
       renderConfidenceBars(),
+      loadLeaderboard(),
     ]);
   } catch (err) {
     console.error("Explainer page failed to load live data:", err);

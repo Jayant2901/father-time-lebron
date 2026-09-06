@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import aging_curve, metrics, players
+from app.api import aging_curve, compare, metrics, players
 from app.core.cache_repository import get_repository
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
@@ -32,6 +32,7 @@ app.add_middleware(
 
 app.include_router(players.router)
 app.include_router(aging_curve.router)
+app.include_router(compare.router)
 app.include_router(metrics.router)
 
 

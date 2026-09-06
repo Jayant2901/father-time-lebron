@@ -88,6 +88,45 @@ def loose_key(strict_key: str) -> str:
     return _SUFFIX_RE.sub("", strict_key)
 
 
+def _load_static_person_id_lookups() -> tuple[dict[str, int], dict[str, int]]:
+    """Offline nba.com person-ID lookup for headshot resolution, built from
+    nba_api's bundled static roster (no network call). Mirrors the strict/
+    loose two-tier matching used for cross-source identity above: try an
+    exact suffix-preserving name match first, fall back to a suffix-stripped
+    match. A name that maps to more than one distinct nba.com person id at a
+    given tier is dropped from that tier's lookup rather than guessed --
+    downstream this simply leaves nba_person_id null for that player.
+    """
+    from nba_api.stats.static import players as nba_static_players
+
+    static = nba_static_players.get_players()
+    strict_ids: dict[str, list[int]] = {}
+    for p in static:
+        strict_ids.setdefault(normalize_name_key(p["full_name"]), []).append(p["id"])
+    strict_lookup = {k: v[0] for k, v in strict_ids.items() if len(set(v)) == 1}
+
+    loose_ids: dict[str, list[int]] = {}
+    for k, ids in strict_ids.items():
+        loose_ids.setdefault(loose_key(k), []).extend(ids)
+    loose_lookup = {k: v[0] for k, v in loose_ids.items() if len(set(v)) == 1}
+
+    return strict_lookup, loose_lookup
+
+
+def resolve_nba_person_ids(display_names: pd.Series) -> pd.Series:
+    """Map each display_name to nba.com's numeric person id for headshot
+    URLs (https://cdn.nba.com/headshots/nba/latest/1040x760/{id}.png), or
+    NaN if no confident match. Batch-time only -- see module docstring on
+    why the running app never calls nba_api itself.
+    """
+    strict_lookup, loose_lookup = _load_static_person_id_lookups()
+    keys = display_names.map(normalize_name_key)
+    ids = keys.map(strict_lookup)
+    missing = ids.isna()
+    ids.loc[missing] = keys.loc[missing].map(loose_key).map(loose_lookup)
+    return ids.astype("Int64")
+
+
 # ------------------------------------------------------------- nba_api load --
 
 def load_nba_api_season(season: str) -> pd.DataFrame | None:
@@ -294,6 +333,7 @@ def build_players_table(player_seasons: pd.DataFrame) -> pd.DataFrame:
         last_season=("season", "max"),
         season_count=("season", "count"),
     )
+    grouped["nba_person_id"] = resolve_nba_person_ids(grouped["display_name"])
     return grouped.reset_index()
 
 
@@ -326,6 +366,7 @@ def main() -> None:
 
     players = build_players_table(player_seasons)
     print(f"Total distinct players: {len(players)}")
+    print(f"Resolved nba_person_id for {players['nba_person_id'].notna().sum()}/{len(players)} players")
 
     write_sqlite(player_seasons, players)
     print(f"Wrote {DB_PATH}")

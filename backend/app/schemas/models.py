@@ -59,6 +59,22 @@ class BaselineResponse(BaseModel):
     points: list[BaselinePoint]
 
 
+class ComparePlayerOut(BaseModel):
+    player_id: str
+    display_name: str
+    headshot_url: str | None
+    qualifying_season_count: int
+    avg_percentile: float | None
+    career_anomaly_index: float | None
+
+
+class CompareResponse(BaseModel):
+    metric: str
+    display_name: str
+    unit: str
+    players: list[ComparePlayerOut]
+
+
 class MetricInfo(BaseModel):
     key: str
     display_name: str

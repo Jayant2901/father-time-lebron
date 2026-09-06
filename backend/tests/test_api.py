@@ -51,6 +51,8 @@ def test_aging_curve_p2_matches_hand_computed_z_scores(client):
     assert points[0]["z_score"] == pytest.approx(1.0)
     assert points[1]["z_score"] == pytest.approx(-1.0)
     assert result["summary"]["peak_anomaly_age"] == 21
+    # p2 only has 2 qualifying seasons -- below classify_archetype's 3-point floor.
+    assert result["archetype"] is None
 
 
 def test_baseline_endpoint(client):

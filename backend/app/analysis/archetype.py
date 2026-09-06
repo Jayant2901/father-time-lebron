@@ -46,7 +46,15 @@ def classify_archetype(points: list[TrajectoryPoint], summary: CareerSummary) ->
             "Defying Father Time",
             f"{seasons} qualifying seasons and still nowhere near the historical baseline late in his career.",
         )
-    if peak_z > 1.5 and (seasons < SHORT_CAREER_SEASONS or (peak_idx < n - 1 and end_avg < peak_z - DECLINE_DROP_THRESHOLD)):
+    # The `seasons < LONG_CAREER_SEASONS` guard on the second branch matters:
+    # without it, any career with a real decline by its final seasons reads
+    # as "Flash in the Pan" even after a decade-plus of sustained excellence
+    # (e.g. a 20+ season career whose last few years are merely age-normal) --
+    # contradicting the label's own "didn't last" tagline.
+    if peak_z > 1.5 and (
+        seasons < SHORT_CAREER_SEASONS
+        or (seasons < LONG_CAREER_SEASONS and peak_idx < n - 1 and end_avg < peak_z - DECLINE_DROP_THRESHOLD)
+    ):
         return Archetype("Flash in the Pan", f"Peaked at +{peak_z:.1f} SD, but it didn't last.")
     if second_half_avg - first_half_avg > RISE_THRESHOLD:
         return Archetype("Late Bloomer", "Got better relative to his age-cohort as his career went on, not worse.")

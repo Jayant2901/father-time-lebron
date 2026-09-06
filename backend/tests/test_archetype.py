@@ -56,3 +56,18 @@ def test_low_spread_consistently_positive_is_remarkably_consistent():
     archetype = classify_archetype(points, summary)
     assert archetype is not None
     assert archetype.label == "Remarkably Consistent"
+
+
+def test_long_career_with_late_decline_is_not_flash_in_the_pan():
+    # A 15-season career that peaked early and stayed well above the
+    # baseline for a decade before declining at the very end (Vince
+    # Carter's real shape) must not read as "Flash in the Pan" -- that
+    # label's own tagline ("it didn't last") would contradict a career
+    # this long. It should fall through to "Early Peak, Fast Decline".
+    zs = [1.6, 1.5, 1.4, 1.3, 1.4, 1.3, 1.2, 1.1, 1.0, 0.9, 0.5, -0.2, -0.5, -0.8, -1.0]
+    points = [_point(20 + i, z) for i, z in enumerate(zs)]
+    summary = _summary(sum(zs) / len(zs), len(zs), peak_anomaly_age=20)
+    archetype = classify_archetype(points, summary)
+    assert archetype is not None
+    assert archetype.label != "Flash in the Pan"
+    assert archetype.label == "Early Peak, Fast Decline"

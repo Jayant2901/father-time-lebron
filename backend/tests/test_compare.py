@@ -26,13 +26,29 @@ def test_compare_two_players(client):
     assert p2["career_anomaly_index"] == pytest.approx(0.0)
 
 
+def test_compare_verdict_names_the_better_ager(client):
+    resp = client.get(
+        "/compare",
+        params={"player_ids": "p1,p2", "metric": "PTS", "min_seasons": 2, "low_confidence_n": 2},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    # career_anomaly_index: p1 = -1.0, p2 = 0.0 -- a 1.0 SD gap, well above the
+    # 0.15 "wash" threshold, so the verdict should name p2 as the better ager.
+    assert body["verdict"] is not None
+    assert "Test Player Two" in body["verdict"]
+    assert "wash" not in body["verdict"]
+
+
 def test_compare_single_player(client):
     resp = client.get(
         "/compare",
         params={"player_ids": "p1", "metric": "PTS", "min_seasons": 2, "low_confidence_n": 2},
     )
     assert resp.status_code == 200
-    assert len(resp.json()["players"]) == 1
+    body = resp.json()
+    assert len(body["players"]) == 1
+    assert body["verdict"] is None
 
 
 def test_compare_unknown_player_id(client):

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Father Time — NBA Aging Curve Explainer</title>
+  <link rel="stylesheet" href="/static/explainer.css">
+</head>
+<body class="explainer">
+
+<nav class="nav wrap" style="border-bottom: 1px solid var(--color-divider);">
+  <div class="nav-brand">Father Time</div>
+  <a href="#method">Method</a>
+  <a href="#charts">The data</a>
+  <a href="#compare">Compare</a>
+  <a href="#trust">Trust</a>
+  <a href="#charts" class="btn btn-secondary">Look someone up ↓</a>
+</nav>
+
+<header class="wrap" style="padding: var(--space-8) 0 var(--space-6);">
+  <p class="eyebrow">Portfolio data project — NBA aging curves</p>
+  <h1 style="max-width: 720px;">Bro is not aging. I checked. It's not normal.</h1>
+  <p class="section-intro" style="font-size: 18px;">I built real aging curves from every qualifying NBA/BAA player-season since 1949-50, then measured how many standard deviations any player sits above or below the historical norm <em>at their exact age</em>. LeBron doesn't just beat the curve — he's been ghosting Father Time since 2003, every single age, no exceptions.</p>
+  <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; margin-top: var(--space-6);">
+    <div style="flex: 1 1 220px; max-width: 240px;">
+      <div id="hero-sd" class="stat-value" style="color: var(--color-accent-700);">…</div>
+      <div class="tag tag-accent" style="margin-top: var(--space-2); white-space: normal;">how unserious the aging curve is being right now</div>
+    </div>
+    <div style="flex: 1 1 220px; max-width: 240px;">
+      <div class="stat-value">24,821</div>
+      <div class="tag tag-neutral" style="margin-top: var(--space-2); white-space: normal;">player-seasons I made suffer through math</div>
+    </div>
+    <div style="flex: 1 1 220px; max-width: 240px;">
+      <div class="stat-value">1949–50</div>
+      <div class="tag tag-neutral" style="margin-top: var(--space-2); white-space: normal;">how far back I had to dig to find someone this normal</div>
+    </div>
+  </div>
+</header>
+
+<section id="method" class="wrap bordered">
+  <p class="eyebrow">The idea, in three steps</p>
+  <h2>How I turned "he doesn't age" into an actual receipt</h2>
+  <p class="section-intro">Raw stats can't be compared across eras — a 1975 stat line and a 2024 stat line are basically different sports. So the pipeline never touches raw stats twice: it converts, then compares, then hands you the proof.</p>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4); margin-top: var(--space-6); align-items: stretch;">
+    <div class="card">
+      <div class="card-kicker">Step 1</div>
+      <div class="card-title">Rank him against literally everyone that year</div>
+      <p class="card-body">Every player-season becomes a 0–100 percentile among that year's qualifying players. 100 = best in the league that year; 50 = "you exist." Same trick baseball uses for OPS+.</p>
+    </div>
+    <div class="card">
+      <div class="card-kicker">Step 2</div>
+      <div class="card-title">Figure out what "normal" even looks like</div>
+      <p class="card-body">Every qualifying player-season at, say, age 27, gets pooled together into a mean and standard deviation — history's own definition of "a normal 27-year-old," no vibes involved.</p>
+    </div>
+    <div class="card">
+      <div class="card-kicker">Step 3</div>
+      <div class="card-title">Catch him being unnatural</div>
+      <p class="card-body">z = (his percentile − age's mean) ÷ age's std. ±1 SD raises an eyebrow. ±2 is basically a medical anomaly. LeBron casually lives at +1.5 to +1.8, every age, forever.</p>
+    </div>
+  </div>
+</section>
+
+<section id="charts" class="wrap bordered">
+  <p class="eyebrow">The deep dive</p>
+  <h2 id="solo-title">LeBron, season by season, never once acting his age</h2>
+  <p class="section-intro">By default: LeBron's percentile at each age, against the shaded band of what's typical for a player that age across NBA history. He never dips into the band — not once, not even at 39. That magenta line has main-character energy and refuses to come down. Search below to run this same check on anyone else in the database.</p>
+
+  <div class="search-block">
+    <div class="search-row">
+      <input id="solo-search" type="text" placeholder="Search any player (e.g. Jordan, Kareem, Curry)" autocomplete="off">
+      <button id="solo-search-btn" type="button">Search</button>
+    </div>
+    <div id="solo-search-results" class="search-results"></div>
+  </div>
+  <div class="metric-row">
+    <label for="solo-metric-select">Metric</label>
+    <select id="solo-metric-select"></select>
+  </div>
+  <div class="status">
+    <div id="solo-loading" class="loading-text" hidden>Loading…</div>
+    <div id="solo-error" class="error" hidden></div>
+  </div>
+
+  <figure class="chart-frame" style="margin-top: var(--space-4);">
+    <img id="solo-face" class="face-slot" alt="" src="" style="border: 2px solid var(--color-accent-2); z-index: 2;">
+    <svg id="solo-chart-svg" class="chart-svg" viewBox="0 0 760 320" role="img" aria-label="Selected player's percentile by age versus league baseline band"></svg>
+  </figure>
+  <figcaption>Shaded band = league mean ± 1 SD of within-season percentile at each age, pooled across NBA history. Faded points sit on a thin historical cohort — interpret cautiously.</figcaption>
+  <div id="solo-point-detail" class="point-detail">Hover or tap a point to see that season's details.</div>
+  <div id="solo-summary" class="inline-summary"></div>
+</section>
+
+<section id="compare" class="wrap bordered">
+  <p class="eyebrow">Featured comparison</p>
+  <h2>LeBron vs. the other legends (he's still not humble about it)</h2>
+  <p class="section-intro">Position = how good a player was on average (up) and for how long (right). Bubble size = how far their aging pattern strays from the historical norm — LeBron's circle is just built different. Add or remove anyone below to rebuild the chart.</p>
+
+  <div class="metric-row">
+    <label for="compare-metric-select">Metric</label>
+    <select id="compare-metric-select"></select>
+  </div>
+  <div id="compare-roster" class="roster"></div>
+  <div class="search-block" style="margin-top: var(--space-3);">
+    <div class="search-row">
+      <input id="compare-search" type="text" placeholder="Add anyone else (e.g. Nash, Wembanyama)" autocomplete="off">
+      <button id="compare-search-btn" type="button">Add</button>
+    </div>
+    <div id="compare-search-results" class="search-results"></div>
+  </div>
+  <div class="status">
+    <div id="compare-loading" class="loading-text" hidden>Loading…</div>
+    <div id="compare-error" class="error" hidden></div>
+  </div>
+
+  <figure class="chart-frame" style="margin-top: var(--space-4);">
+    <svg id="bubble-chart-svg" class="chart-svg" viewBox="0 0 640 380" role="img" aria-label="Career longevity versus average percentile for the selected roster of players"></svg>
+    <div id="bubble-faces" style="position: absolute; inset: 0;"></div>
+  </figure>
+  <figcaption>Axes are zoomed to this roster, not the full 0–100 scale — read positions relative to each other, not against some fantasy 100. Figures come from the same live pipeline as the tool itself.</figcaption>
+  <div id="compare-point-detail" class="point-detail">Hover or tap a face to see their stats.</div>
+</section>
+
+<section id="trust" class="wrap bordered">
+  <p class="eyebrow">How much to trust this</p>
+  <h2>Some ages barely have any receipts, ngl</h2>
+  <p class="section-intro">The age baseline only pools players with several qualifying seasons, and only ages with at least 15 historical player-seasons get full confidence. Teenage and late-30s seasons are real but rare — I'm not going to pretend I'm sure when I'm not.</p>
+  <div id="confidence-bars" style="display: flex; align-items: flex-end; gap: var(--space-4); height: 160px; margin-top: var(--space-6); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-divider);"></div>
+  <p style="font-size: 12px; opacity: 0.7; margin-top: var(--space-2);">Sample counts are the real pooled cohort sizes behind each age's baseline (Player Efficiency Rating). Faded bars = below the 15-season confidence threshold.</p>
+</section>
+
+<section class="wrap bordered">
+  <p class="eyebrow">The fine print</p>
+  <h3>Things worth knowing (the nerdy stuff, but I tried)</h3>
+  <ul class="fine-print">
+    <li>I compare percentiles, not raw stats — a 1975 stat line and a 2024 stat line are basically speaking different languages.</li>
+    <li>A season only counts if the guy actually played (≥800 minutes, ≥40 games), and "normal for this age" only counts careers with 3+ qualifying seasons — no letting one hot cameo skew what's typical.</li>
+    <li>PER, Win Shares, BPM and VORP go back to 1949-50; True Shooting %, Usage % and friends only exist from 1996-97 on, because that's just when the data starts.</li>
+    <li>Cross-source player matching is name-based — a tiny sliver (~0.2% of rows) are real same-name mix-ups, logged and disclosed instead of swept under the rug.</li>
+  </ul>
+</section>
+
+<section class="wrap bordered">
+  <h2 style="max-width: 520px;">Go find out if your favorite player actually ages fine, or if you've just been coping.</h2>
+  <p class="section-intro">Over 4,800 players, back to 1949-50 — the same pipeline that exposed LeBron works on anyone. Yes, even that guy you keep defending.</p>
+  <a href="#charts" class="btn btn-primary" style="margin-top: var(--space-3); font-size: 16px; padding: var(--space-3) var(--space-6);">Look someone up ↑</a>
+</section>
+
+<footer class="wrap" style="padding: var(--space-6) 0 var(--space-8); border-top: 1px solid var(--color-divider);">
+  <p>Father Time — a data engineering &amp; statistics portfolio project. Sources: stats.nba.com (via nba_api) and Basketball-Reference.</p>
+</footer>
+
+<script src="/static/explainer.js"></script>
+</body>
+</html>

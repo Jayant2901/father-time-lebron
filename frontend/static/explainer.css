@@ -133,6 +133,12 @@ body.explainer {
   font-family: var(--font-display); font-weight: 700; font-size: 42px; line-height: 1;
 }
 
+.explainer .hero-stats {
+  display: flex; flex-wrap: wrap; gap: var(--space-8) var(--space-6); margin-top: var(--space-8);
+}
+.explainer .hero-stat { flex: 1 1 220px; max-width: 240px; }
+.explainer .hero-stat .tag { margin-top: var(--space-3); white-space: normal; line-height: 1.4; }
+
 /* tags -- sharp 2px corners, not pills */
 .explainer .tag {
   display: inline-flex; align-items: center; font-size: 11px;
@@ -243,15 +249,6 @@ body.explainer {
 
 .explainer .inline-summary { font-size: 14px; margin-top: var(--space-3); opacity: 0.9; }
 .explainer .inline-summary strong { color: var(--color-accent-800); }
-
-/* "Roast me" reveal button */
-.explainer .roast-btn {
-  display: inline-flex; align-items: center; font-family: var(--font-body);
-  font-size: 12px; font-weight: 600; color: var(--color-bg); background: var(--color-flag);
-  border: none; border-radius: 2px; padding: 3px 10px; cursor: pointer; margin-right: var(--space-2);
-}
-.explainer .roast-btn:hover { background: var(--color-flag-800); }
-.explainer .roast-text { font-style: italic; opacity: 0.9; }
 
 /* "What if" age slider */
 .explainer .whatif-block {

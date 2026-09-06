@@ -40,7 +40,6 @@ class AgingCurveMetricResult(BaseModel):
     points: list[TrajectoryPointOut]
     summary: CareerSummaryOut
     archetype: ArchetypeOut | None = None
-    roast: str | None = None
 
 
 class AgingCurveResponse(BaseModel):

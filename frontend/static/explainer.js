@@ -256,7 +256,7 @@ function setupWhatIf(baseline, featured) {
 }
 
 function renderSoloSummary(series) {
-  eby("solo-summary").innerHTML = series.map(({ displayName, metricDisplayName, summary, color, archetype, roast }) => {
+  eby("solo-summary").innerHTML = series.map(({ displayName, metricDisplayName, summary, color, archetype }) => {
     if (summary.career_anomaly_index == null) {
       return `<p>${displayName} has no qualifying seasons for ${metricDisplayName} under the current thresholds.</p>`;
     }
@@ -264,25 +264,13 @@ function renderSoloSummary(series) {
     const badge = archetype
       ? `<span class="tag tag-accent">${archetype.label}</span> <span>${archetype.tagline}</span><br>`
       : "";
-    const roastBlock = roast
-      ? `<button type="button" class="roast-btn">🔥 Roast</button>
-         <span class="roast-text" hidden>${roast}</span><br>`
-      : "";
-    return `<p>${badge}${roastBlock}<strong style="color:${color};">${displayName}</strong> — Career Anomaly Index for ${metricDisplayName}:
+    return `<p>${badge}<strong style="color:${color};">${displayName}</strong> — Career Anomaly Index for ${metricDisplayName}:
       <strong>${summary.career_anomaly_index.toFixed(2)} SD</strong> ${dir} the typical aging curve
       (${describeSd(summary.career_anomaly_index)}).
       Peak-anomaly age: <strong>${summary.peak_anomaly_age}</strong>
       · seasons in the league-wide top 5%: <strong>${summary.top_5_pct_season_count}</strong>
       · qualifying seasons analyzed: ${summary.qualifying_season_count}.</p>`;
   }).join("");
-
-  for (const btn of eby("solo-summary").querySelectorAll(".roast-btn")) {
-    btn.addEventListener("click", () => {
-      const text = btn.nextElementSibling;
-      text.hidden = !text.hidden;
-      btn.textContent = text.hidden ? "🔥 Roast" : "🔥 Hide roast";
-    });
-  }
 }
 
 async function loadSoloChart() {
@@ -315,7 +303,6 @@ async function loadSoloChart() {
         points: result.points,
         summary: result.summary,
         archetype: result.archetype,
-        roast: result.roast,
         headshotUrl: headshotsById[id] ?? null,
         color: id === lebronId ? "var(--color-accent-2)" : "var(--color-accent)",
       };

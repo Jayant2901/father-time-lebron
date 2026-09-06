@@ -86,7 +86,14 @@ body.explainer {
   color: rgba(233, 226, 242, 0.55);
 }
 
-.explainer .wrap { max-width: 880px; margin: 0 auto; padding: 0 var(--space-4); }
+/* Horizontal-only, as longhand -- a shorthand `padding: 0 var(--space-4)`
+   here would silently zero out vertical padding on anything combining
+   .wrap with another class of equal specificity (every <section
+   class="wrap ..."> on the page), since .explainer .wrap (2 classes)
+   beats .explainer section (1 class + 1 element) regardless of source
+   order. That's exactly what was happening -- every section's intended
+   40px top/bottom padding was being overridden to 0. */
+.explainer .wrap { max-width: 880px; margin: 0 auto; padding-left: var(--space-4); padding-right: var(--space-4); }
 
 /* flag-tab: small clip-path pennant, sentence case -- replaces the old
    tracked-out ALL-CAPS ".eyebrow" label. */
